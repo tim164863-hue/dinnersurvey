@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>餐會時間調查</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f5f0e8;
+    --warm: #e8dcc8;
+    --gold: #c9a84c;
+    --gold-light: #e8c87a;
+    --brown: #5c3d2e;
+    --dark: #2a1f14;
+    --text: #3d2b1f;
+    --green: #4a7c59;
+    --red: #c0392b;
+    --green-light: #d4edda;
+    --red-light: #f8d7da;
+    --shadow: rgba(92,61,46,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Serif TC', serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    background-image: 
+      radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(92,61,46,0.06) 0%, transparent 50%);
+  }
+
+  .header {
+    background: var(--dark);
+    padding: 40px 20px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, transparent 60%);
+  }
+
+  .header-ornament {
+    color: var(--gold);
+    font-size: 13px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 44px);
+    color: var(--cream);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .header-sub {
+    color: var(--gold-light);
+    font-size: 14px;
+    letter-spacing: 2px;
+    opacity: 0.85;
+  }
+
+  .gold-line {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 16px auto;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+  }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* FORM PAGE */
+  .card {
+    background: white;
+    border-radius: 2px;
+    box-shadow: 0 4px 30px var(--shadow);
+    padding: 40px;
+    border-top: 3px solid var(--gold);
+    position: relative;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--brown);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--warm);
+  }
+
+  .name-select {
+    width: 100%;
+    padding: 14px 18px;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 16px;
+    border: 2px solid var(--warm);
+    border-radius: 2px;
+    background: var(--cream);
+    color: var(--text);
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235c3d2e' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 44px;
+    margin-bottom: 32px;
+  }
+  .name-select:focus { outline: none; border-color: var(--gold); }
+
+  /* Calendar */
+  .calendar-grid {
+    margin-bottom: 32px;
+  }
+
+  .month-block { margin-bottom: 32px; }
+
+  .month-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brown);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--warm);
+  }
+
+  .weekday-headers {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .weekday-header {
+    text-align: center;
+    font-size: 11px;
+    color: #999;
+    letter-spacing: 1px;
+    padding: 4px 0;
+  }
+
+  .days-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .day-cell {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--warm);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    background: white;
+    min-height: 52px;
+    user-select: none;
+  }
+
+  .day-cell:hover { border-color: var(--gold); }
+
+  .day-cell.available {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+
+  .day-cell.unavailable {
+    background: var(--red);
+    border-color: var(--red);
+    color: white;
+  }
+
+  .day-num {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .day-week {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+  }
+
+  .day-cell.available .day-week,
+  .day-cell.unavailable .day-week { opacity: 0.85; }
+
+  .empty-cell { visibility: hidden; }
+
+  /* Toggle buttons */
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #666;
+  }
+  .legend-dot {
+    width: 16px; height: 16px;
+    border-radius: 2px;
+  }
+  .legend-dot.neutral { background: white; border: 2px solid var(--warm); }
+  .legend-dot.avail { background: var(--green); }
+  .legend-dot.unavail { background: var(--red); }
+
+  .instruction {
+    font-size: 13px;
+    color: #888;
+    background: var(--cream);
+    padding: 12px 16px;
+    border-left: 3px solid var(--gold);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--dark);
+    color: var(--gold-light);
+    border: none;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    font-weight: 600;
+  }
+  .submit-btn:hover { background: var(--brown); }
+
+  /* RESULT PAGE */
+  .result-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+    border-bottom: 2px solid var(--warm);
+  }
+  .tab-btn {
+    padding: 12px 24px;
+    border: none;
+    background: none;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    color: #999;
+    cursor: pointer;
+    letter-spacing: 1px;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    color: var(--brown);
+    font-weight: 700;
+    border-bottom-color: var(--gold);
+  }
+
+  .result-calendar { }
+
+  .result-month { margin-bottom: 36px; }
+  .result-month-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brown);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--warm);
+  }
+
+  .result-days-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .result-day {
+    border-radius: 2px;
+    padding: 8px 4px 10px;
+    text-align: center;
+    border: 1px solid var(--warm);
+    background: white;
+    min-height: 80px;
+    position: relative;
+  }
+
+  .result-day-num {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--brown);
+    margin-bottom: 4px;
+  }
+
+  .result-day-week {
+    font-size: 10px;
+    color: #aaa;
+    margin-bottom: 6px;
+  }
+
+  .avail-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--warm);
+    margin: 4px 4px 6px;
+    overflow: hidden;
+  }
+  .avail-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  .avail-count {
+    font-size: 11px;
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  .unavail-count {
+    font-size: 11px;
+    color: var(--red);
+  }
+
+  .result-day.best-day {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px var(--gold);
+  }
+
+  .best-badge {
+    position: absolute;
+    top: -1px; right: -1px;
+    background: var(--gold);
+    color: white;
+    font-size: 9px;
+    padding: 2px 5px;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+
+  .names-list {
+    margin-top: 6px;
+  }
+  .name-chip {
+    display: inline-block;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 20px;
+    margin: 1px;
+    letter-spacing: 0.3px;
+  }
+  .name-chip.avail { background: var(--green-light); color: var(--green); }
+  .name-chip.unavail { background: var(--red-light); color: var(--red); }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 2px solid var(--warm);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 13px;
+    color: var(--brown);
+    cursor: pointer;
+    border-radius: 2px;
+    margin-bottom: 24px;
+    transition: all 0.2s;
+  }
+  .back-btn:hover { border-color: var(--gold); }
+
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .response-count {
+    background: var(--dark);
+    color: var(--gold-light);
+    padding: 8px 18px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    border-radius: 2px;
+  }
+
+  .view-toggle {
+    display: flex;
+    gap: 0;
+    border: 2px solid var(--warm);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .view-btn {
+    padding: 8px 16px;
+    border: none;
+    background: white;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 12px;
+    color: #999;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .view-btn.active { background: var(--dark); color: var(--gold-light); }
+
+  .submitted-ok {
+    text-align: center;
+    padding: 32px 0 8px;
+    animation: fadeIn 0.4s ease;
+  }
+  .ok-icon {
+    width: 56px; height: 56px;
+    background: var(--green);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 26px;
+  }
+  .ok-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--brown);
+    margin-bottom: 8px;
+  }
+  .ok-sub { color: #888; font-size: 14px; line-height: 1.6; }
+
+  .nav-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .nav-btn {
+    padding: 12px 28px;
+    border-radius: 2px;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+  .nav-btn-primary {
+    background: var(--dark);
+    color: var(--gold-light);
+    border: 2px solid var(--dark);
+  }
+  .nav-btn-secondary {
+    background: transparent;
+    color: var(--brown);
+    border: 2px solid var(--warm);
+  }
+  .nav-btn:hover { opacity: 0.85; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .empty-result {
+    text-align: center;
+    padding: 40px;
+    color: #aaa;
+    font-size: 15px;
+  }
+
+  @media (max-width: 600px) {
+    .card { padding: 24px 16px; }
+    .result-day { min-height: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-ornament">▸ 餐會邀請 ◂</div>
+  <h1>餐會時間調查</h1>
+  <div class="gold-line"></div>
+  <div class="header-sub">2026年 3月 — 4月　平日時段</div>
+</div>
+
+<div class="container">
+
+  <!-- FORM PAGE -->
+  <div class="page active" id="page-form">
+    <div class="card">
+      <div class="section-title">選擇您的姓名</div>
+      <select class="name-select" id="name-select">
+        <option value="">── 請選擇 ──</option>
+        <option>林承正</option>
+        <option>林高正</option>
+        <option>陳威廷</option>
+        <option>曾騰慶</option>
+        <option>蘇冠宇</option>
+        <option>黃孅瑩</option>
+        <option>李居城</option>
+        <option>洪羽柔</option>
+      </select>
+
+      <div class="section-title">標記您的可行日期</div>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot neutral"></div>未標記</div>
+        <div class="legend-item"><div class="legend-dot avail"></div>可行</div>
+        <div class="legend-item"><div class="legend-dot unavail"></div>不可行</div>
+      </div>
+
+      <div class="instruction">
+        點擊日期切換狀態：<strong>第一次</strong>點擊 → ✓ 可行（綠色），<strong>第二次</strong>點擊 → ✗ 不可行（紅色），<strong>第三次</strong>點擊 → 重置。
+      </div>
+
+      <div class="calendar-grid" id="form-calendar"></div>
+
+      <button class="submit-btn" onclick="submitForm()">送出調查結果</button>
+    </div>
+  </div>
+
+  <!-- SUBMIT SUCCESS PAGE -->
+  <div class="page" id="page-success">
+    <div class="card">
+      <div class="submitted-ok">
+        <div class="ok-icon">✓</div>
+        <div class="ok-title">已成功送出！</div>
+        <div class="ok-sub" id="success-msg"></div>
+        <div class="nav-actions">
+          <button class="nav-btn nav-btn-primary" onclick="showResults()">查看調查結果</button>
+          <button class="nav-btn nav-btn-secondary" onclick="showForm()">重新填寫</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS PAGE -->
+  <div class="page" id="page-results">
+    <div class="card">
+      <button class="back-btn" onclick="showForm()">← 返回填寫</button>
+
+      <div class="result-header">
+        <div>
+          <div class="section-title" style="margin-bottom:4px">調查結果一覽</div>
+          <div style="font-size:13px;color:#aaa">點擊日期可查看詳細人員名單</div>
+        </div>
+        <div class="response-count" id="resp-count">0 人已回覆</div>
+      </div>
+
+      <div class="result-tabs">
+        <button class="tab-btn active" onclick="switchTab('calendar')">📅 日曆檢視</button>
+        <button class="tab-btn" onclick="switchTab('ranking')">📊 排行榜</button>
+      </div>
+
+      <div id="tab-calendar">
+        <div id="result-calendar"></div>
+      </div>
+
+      <div id="tab-ranking" style="display:none">
+        <div id="ranking-list"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const MEMBERS = ['林承正','林高正','陳威廷','曾騰慶','蘇冠宇','黃孅瑩','李居城','洪羽柔'];
+const WEEKDAYS = ['一','二','三','四','五'];
+const API_URL = 'https://script.google.com/macros/s/AKfycbycWFt1oCTfM9uTGJB25g6vNRH8nGSqfHZ-5MVk9_roI_tx9HGIWWs09CiP0baxmm5PAA/exec';
+
+let remoteData = null;
+
+async function loadData() {
+  if (remoteData !== null) return remoteData;
+  try {
+    const res = await fetch(API_URL);
+    remoteData = await res.json();
+    return remoteData;
+  } catch(e) { return {}; }
+}
+
+async function saveData(name, responses) {
+  remoteData = null; // invalidate cache
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ name, responses }),
+  });
+  const result = await res.json();
+  return result.status === 'ok';
+}
+
+function getWeekdays(year, month) {
+  const days = [];
+  const d = new Date(year, month - 1, 1);
+  while (d.getMonth() === month - 1) {
+    const dow = d.getDay();
+    if (dow >= 1 && dow <= 5) {
+      days.push({
+        date: new Date(d),
+        dateStr: `${year}-${String(month).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,
+        num: d.getDate(),
+        dow: dow
+      });
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+
+function groupIntoWeeks(days) {
+  const weeks = [];
+  if (!days.length) return weeks;
+  let week = [];
+  let prevDow = 0;
+  for (const day of days) {
+    if (day.dow < prevDow && week.length) { weeks.push(week); week = []; }
+    if (!week.length && day.dow > 1) {
+      for (let i = 1; i < day.dow; i++) week.push(null);
+    }
+    week.push(day);
+    prevDow = day.dow;
+    if (day.dow === 5) { weeks.push(week); week = []; prevDow = 0; }
+  }
+  if (week.length) { while (week.length < 5) week.push(null); weeks.push(week); }
+  return weeks;
+}
+
+const MONTHS = [
+  { year: 2026, month: 3, label: '2026年 3月' },
+  { year: 2026, month: 4, label: '2026年 4月' }
+];
+
+let formState = {};
+
+function buildFormCalendar() {
+  const cal = document.getElementById('form-calendar');
+  cal.innerHTML = '';
+  for (const m of MONTHS) {
+    const days = getWeekdays(m.year, m.month);
+    const weeks = groupIntoWeeks(days);
+    const block = document.createElement('div');
+    block.className = 'month-block';
+    let html = `<div class="month-label">${m.label}</div>`;
+    html += `<div class="weekday-headers">`;
+    for (const w of WEEKDAYS) html += `<div class="weekday-header">週${w}</div>`;
+    html += `</div>`;
+    for (const week of weeks) {
+      html += `<div class="days-row">`;
+      for (const day of week) {
+        if (!day) { html += `<div class="day-cell empty-cell"></div>`; continue; }
+        const state = formState[day.dateStr] || '';
+        const cls = state === 'available' ? 'available' : state === 'unavailable' ? 'unavailable' : '';
+        html += `<div class="day-cell ${cls}" onclick="toggleDay('${day.dateStr}')">
+          <div class="day-num">${day.num}</div>
+          <div class="day-week">週${WEEKDAYS[day.dow-1]}</div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    block.innerHTML = html;
+    cal.appendChild(block);
+  }
+}
+
+function toggleDay(dateStr) {
+  const cur = formState[dateStr] || '';
+  if (!cur) formState[dateStr] = 'available';
+  else if (cur === 'available') formState[dateStr] = 'unavailable';
+  else delete formState[dateStr];
+  buildFormCalendar();
+}
+
+function showForm() {
+  document.getElementById('page-form').className = 'page active';
+  document.getElementById('page-success').className = 'page';
+  document.getElementById('page-results').className = 'page';
+}
+
+async function showResults() {
+  document.getElementById('page-form').className = 'page';
+  document.getElementById('page-success').className = 'page';
+  document.getElementById('page-results').className = 'page active';
+  document.getElementById('result-calendar').innerHTML = '<div style="text-align:center;padding:40px;color:#aaa;font-size:14px;">載入中…</div>';
+  await buildResultCalendar();
+}
+
+async function submitForm() {
+  const name = document.getElementById('name-select').value;
+  if (!name) { alert('請先選擇您的姓名！'); return; }
+  const btn = document.querySelector('.submit-btn');
+  btn.textContent = '送出中…';
+  btn.disabled = true;
+  try {
+    await saveData(name, formState);
+    formState = {};
+    document.getElementById('name-select').value = '';
+    buildFormCalendar();
+    document.getElementById('success-msg').innerHTML = `<strong>${name}</strong> 的回覆已記錄！<br>感謝您的填寫。`;
+    document.getElementById('page-form').className = 'page';
+    document.getElementById('page-success').className = 'page active';
+    document.getElementById('page-results').className = 'page';
+  } catch(e) {
+    alert('送出失敗，請檢查網路後再試一次。');
+  } finally {
+    btn.textContent = '送出調查結果';
+    btn.disabled = false;
+  }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='calendar')||(i===1&&tab==='ranking')));
+  document.getElementById('tab-calendar').style.display = tab==='calendar' ? '' : 'none';
+  document.getElementById('tab-ranking').style.display = tab==='ranking' ? '' : 'none';
+  if (tab==='ranking') buildRanking();
+}
+
+let expandedDate = null;
+
+async function buildResultCalendar() {
+  const data = await loadData();
+  const respondents = Object.keys(data);
+  document.getElementById('resp-count').textContent = `${respondents.length} 人已回覆`;
+  const cal = document.getElementById('result-calendar');
+  cal.innerHTML = '';
+  let maxAvail = 0;
+  for (const m of MONTHS) {
+    for (const day of getWeekdays(m.year, m.month)) {
+      let cnt = respondents.filter(n => (data[n][day.dateStr]||'')==='available').length;
+      if (cnt > maxAvail) maxAvail = cnt;
+    }
+  }
+  for (const m of MONTHS) {
+    const days = getWeekdays(m.year, m.month);
+    const weeks = groupIntoWeeks(days);
+    const block = document.createElement('div');
+    block.className = 'result-month';
+    let html = `<div class="result-month-label">${m.label}</div>`;
+    html += `<div class="weekday-headers" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px;">`;
+    for (const w of WEEKDAYS) html += `<div class="weekday-header">週${w}</div>`;
+    html += `</div>`;
+    for (const week of weeks) {
+      html += `<div class="result-days-row">`;
+      for (const day of week) {
+        if (!day) { html += `<div class="result-day" style="visibility:hidden"></div>`; continue; }
+        const availNames = respondents.filter(n => (data[n][day.dateStr]||'')==='available');
+        const unavailNames = respondents.filter(n => (data[n][day.dateStr]||'')==='unavailable');
+        const total = respondents.length || 1;
+        const pct = Math.round((availNames.length/total)*100);
+        const isBest = maxAvail>0 && availNames.length===maxAvail;
+        const isExpanded = expandedDate===day.dateStr;
+        html += `<div class="result-day${isBest?' best-day':''}" onclick="toggleExpand('${day.dateStr}')" style="cursor:pointer">
+          ${isBest?'<div class="best-badge">★ 最佳</div>':''}
+          <div class="result-day-num">${day.num}</div>
+          <div class="result-day-week">週${WEEKDAYS[day.dow-1]}</div>
+          <div class="avail-bar"><div class="avail-fill" style="width:${pct}%"></div></div>
+          <div class="avail-count">✓ ${availNames.length}</div>
+          <div class="unavail-count">✗ ${unavailNames.length}</div>
+          ${isExpanded?`<div class="names-list">${availNames.map(n=>`<span class="name-chip avail">${n}</span>`).join('')}${unavailNames.map(n=>`<span class="name-chip unavail">${n}</span>`).join('')}</div>`:''}
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    block.innerHTML = html;
+    cal.appendChild(block);
+  }
+}
+
+async function toggleExpand(dateStr) {
+  expandedDate = expandedDate===dateStr ? null : dateStr;
+  await buildResultCalendar();
+}
+
+async function buildRanking() {
+  const data = await loadData();
+  const respondents = Object.keys(data);
+  if (!respondents.length) {
+    document.getElementById('ranking-list').innerHTML = '<div class="empty-result">尚無回覆資料</div>';
+    return;
+  }
+  const allDays = [];
+  for (const m of MONTHS) allDays.push(...getWeekdays(m.year, m.month));
+  const scores = allDays.map(day => {
+    const availNames = respondents.filter(n=>(data[n][day.dateStr]||'')==='available');
+    const unavailNames = respondents.filter(n=>(data[n][day.dateStr]||'')==='unavailable');
+    return { day, avail:availNames.length, unavail:unavailNames.length, availNames, unavailNames };
+  });
+  scores.sort((a,b)=>b.avail-a.avail||a.unavail-b.unavail);
+  const top = scores.slice(0,10);
+  let html = '<div style="margin-bottom:8px;font-size:13px;color:#aaa;letter-spacing:0.5px">以可行人數排序，顯示前10名</div>';
+  for (let i=0;i<top.length;i++) {
+    const s=top[i]; const d=s.day;
+    const mLabel=`${d.date.getMonth()+1}月${d.num}日 週${WEEKDAYS[d.dow-1]}`;
+    html+=`<div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--warm)">
+      <div style="font-size:20px;font-weight:700;color:${i<3?'var(--gold)':'#ccc'};min-width:32px;text-align:center">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700;color:var(--brown);margin-bottom:6px">${mLabel}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          ${s.availNames.map(n=>`<span class="name-chip avail">${n}</span>`).join('')}
+          ${s.unavailNames.map(n=>`<span class="name-chip unavail">${n}</span>`).join('')}
+        </div>
+      </div>
+      <div style="text-align:right;min-width:52px">
+        <div style="font-size:17px;font-weight:700;color:var(--green)">✓ ${s.avail}</div>
+        <div style="font-size:12px;color:var(--red)">✗ ${s.unavail}</div>
+      </div>
+    </div>`;
+  }
+  document.getElementById('ranking-list').innerHTML = html;
+}
+
+buildFormCalendar();
+</script>
+</body>
+</html>
