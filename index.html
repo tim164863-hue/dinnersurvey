@@ -176,7 +176,7 @@
   <div class="header-ornament">▸ 餐會邀請 ◂</div>
   <h1>餐會時間調查</h1>
   <div class="gold-line"></div>
-  <div class="header-sub">2026年 3月 — 4月　平日時段</div>
+  <div class="header-sub">2026年 8月 — 9月　平日時段</div>
 </div>
 
 <div class="container">
@@ -256,7 +256,7 @@
 const MEMBERS  = ['林承正','林高正','陳威廷','曾騰慶','蘇冠宇','黃孅瑩','李居城','洪羽柔','張皓然'];
 const WEEKDAYS = ['一','二','三','四','五'];
 const API_URL  = 'https://script.google.com/macros/s/AKfycbycWFt1oCTfM9uTGJB25g6vNRH8nGSqfHZ-5MVk9_roI_tx9HGIWWs09CiP0baxmm5PAA/exec';
-const MONTHS   = [{year:2026,month:3,label:'2026年 3月'},{year:2026,month:4,label:'2026年 4月'}];
+const MONTHS   = [{year:2026,month:8,label:'2026年 8月'},{year:2026,month:9,label:'2026年 9月'}];
 
 let remoteData = null;
 let formState  = {};
@@ -278,9 +278,13 @@ async function saveData(name, responses) {
 /* ── DATE HELPERS ── */
 function getWeekdays(year,month) {
   const days=[]; const d=new Date(year,month-1,1);
+  const start=new Date(2026,7,3);
+  const end=new Date(2026,8,4);
   while(d.getMonth()===month-1){
     const dow=d.getDay();
-    if(dow>=1&&dow<=5) days.push({date:new Date(d),dateStr:`${year}-${String(month).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,num:d.getDate(),dow});
+    if(d>=start && d<=end && dow>=1&&dow<=5){
+      days.push({date:new Date(d),dateStr:`${year}-${String(month).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,num:d.getDate(),dow});
+    }
     d.setDate(d.getDate()+1);
   }
   return days;
